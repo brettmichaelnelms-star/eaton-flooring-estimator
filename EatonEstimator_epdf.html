@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Eaton Hardwood Flooring Estimator</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+color:white;
+text-align:center;
+background-image:url("http://www.eatonhardwoodfloors.com/assets/images/patterns-custom8-2000x1495-79.jpg");
+background-size:cover;
+background-position:center;
+background-attachment:fixed;
+}
+
+.overlay{
+background:rgba(0,0,0,0.7);
+min-height:100vh;
+padding:20px;
+}
+
+input{
+padding:10px;
+margin:6px;
+width:220px;
+font-size:16px;
+border-radius:5px;
+border:none;
+}
+
+button{
+padding:10px 16px;
+margin:6px;
+font-size:16px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.addBtn{background:#2ecc71;color:white;}
+.deleteBtn{background:#e74c3c;color:white;}
+.emailBtn{background:#3498db;color:white;}
+.pdfBtn{background:#f39c12;color:white;}
+
+table{
+width:95%;
+margin:auto;
+border-collapse:collapse;
+margin-top:20px;
+background:rgba(0,0,0,0.8);
+}
+
+td,th{
+border:1px solid #444;
+padding:8px;
+}
+
+#results{
+margin-top:20px;
+font-size:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="overlay">
+
+<h2>Eaton Hardwood Flooring Estimator</h2>
+
+<h3>Customer Information</h3>
+
+<input id="customerName" placeholder="Customer Name"><br>
+<input id="customerAddress" placeholder="Customer Address"><br>
+<input id="customerEmail" placeholder="Customer Email"><br>
+
+<h3>Add Room</h3>
+
+<input id="roomName" placeholder="Room Name"><br>
+
+<input id="length" placeholder="Length (ft)">
+<input id="width" placeholder="Width (ft)"><br>
+
+<input id="price" placeholder="Price $ per sq ft"><br>
+
+<button class="addBtn" onclick="addRoom()">Add Room</button>
+
+<table id="roomTable">
+
+<tr>
+<th>Room</th>
+<th>Sq Ft</th>
+<th>Price</th>
+<th>Room Cost</th>
+<th>Delete</th>
+</tr>
+
+</table>
+
+<div id="results"></div>
+
+<br>
+
+<button class="emailBtn" onclick="emailEstimate()">Email Estimate</button>
+
+<button class="pdfBtn" onclick="generatePDF()">Generate PDF Estimate</button>
+
+</div>
+
+<script>
+
+let rooms=[];
+
+function addRoom(){
+
+let name=document.getElementById("roomName").value;
+let length=parseFloat(document.getElementById("length").value);
+let width=parseFloat(document.getElementById("width").value);
+let price=parseFloat(document.getElementById("price").value);
+
+if(!length || !width || !price) return;
+
+let area=length*width;
+let roomCost=area*price;
+
+rooms.push({name,area,price,roomCost});
+
+renderTable();
+
+document.getElementById("roomName").value="";
+document.getElementById("length").value="";
+document.getElementById("width").value="";
+document.getElementById("price").value="";
+}
+
+function deleteRoom(index){
+
+rooms.splice(index,1);
+renderTable();
+
+}
+
+function renderTable(){
+
+let table=document.getElementById("roomTable");
+
+table.innerHTML=`
+<tr>
+<th>Room</th>
+<th>Sq Ft</th>
+<th>Price</th>
+<th>Room Cost</th>
+<th>Delete</th>
+</tr>`;
+
+let totalSqFt=0;
+let totalCost=0;
+
+rooms.forEach((room,index)=>{
+
+totalSqFt+=room.area;
+totalCost+=room.roomCost;
+
+let row=table.insertRow(-1);
+
+row.insertCell(0).innerHTML=room.name;
+row.insertCell(1).innerHTML=room.area.toFixed(2);
+row.insertCell(2).innerHTML="$"+room.price.toFixed(2);
+row.insertCell(3).innerHTML="$"+room.roomCost.toFixed(2);
+
+row.insertCell(4).innerHTML=
+`<button class="deleteBtn" onclick="deleteRoom(${index})">Delete</button>`;
+
+});
+
+calculateTotals(totalSqFt,totalCost);
+
+}
+
+function calculateTotals(totalSqFt,totalCost){
+
+let waste=totalSqFt*0.10;
+
+let finalSqFt=totalSqFt+waste;
+
+let avgPrice= totalSqFt ? totalCost/totalSqFt : 0;
+
+let finalCost=finalSqFt*avgPrice;
+
+document.getElementById("results").innerHTML=
+
+"Total Sq Ft: "+totalSqFt.toFixed(2)+
+"<br>Waste (10%): "+waste.toFixed(2)+
+"<br><b>Total Flooring Needed: "+finalSqFt.toFixed(2)+" sq ft</b>"+
+"<br><br><b>Estimated Project Cost: $"+finalCost.toFixed(2)+"</b>";
+
+window.totalSqFt=finalSqFt.toFixed(2);
+window.totalEstimate=finalCost.toFixed(2);
+
+}
+
+function emailEstimate(){
+
+let email=document.getElementById("customerEmail").value;
+
+let name=document.getElementById("customerName").value;
+
+let address=document.getElementById("customerAddress").value;
+
+let subject="Eaton Hardwood Flooring Estimate";
+
+let body=
+"Customer: "+name+"%0D%0A"+
+"Address: "+address+"%0D%0A%0D%0A"+
+"Total Flooring Needed: "+window.totalSqFt+" sq ft%0D%0A"+
+"Estimated Cost: $"+window.totalEstimate;
+
+window.location.href="mailto:"+email+
+"?subject="+subject+
+"&body="+body;
+
+}
+
+function generatePDF(){
+
+const { jsPDF } = window.jspdf;
+
+let doc = new jsPDF();
+
+let name=document.getElementById("customerName").value || "Customer";
+let address=document.getElementById("customerAddress").value || "";
+
+let today=new Date();
+let date=today.toLocaleDateString();
+
+let customerName=document.getElementById("customerName").value || "CUSTOMER";
+
+let lastName=customerName.trim().split(" ").slice(-1)[0].toUpperCase();
+
+let randomNum=Math.floor(1000+Math.random()*9000);
+
+let estimateNumber="EH-"+today.getFullYear()+"-"+lastName+"-"+randomNum;
+
+let y=20;
+
+doc.setFont("helvetica","bold");
+doc.setFontSize(20);
+
+doc.text("Eaton Hardwood Flooring",20,y);
+
+doc.setFontSize(11);
+doc.setFont("helvetica","normal");
+
+doc.text("Phone: (214) 908-1390",150,15);
+doc.text("Email: info@eatonhardwoodfloors.com",150,20);
+
+y+=12;
+
+doc.setFont("helvetica","bold");
+doc.text("Estimate #:",20,y);
+doc.text("Date:",120,y);
+
+doc.setFont("helvetica","normal");
+doc.text(estimateNumber,45,y);
+doc.text(date,135,y);
+
+y+=10;
+
+doc.setFont("helvetica","bold");
+doc.text("Customer Information",20,y);
+
+y+=8;
+
+doc.setFont("helvetica","normal");
+doc.text("Name: "+name,20,y);
+
+y+=6;
+
+doc.text("Address: "+address,20,y);
+
+y+=12;
+
+doc.setFont("helvetica","bold");
+
+doc.text("Room",20,y);
+doc.text("Sq Ft",90,y);
+doc.text("Price",120,y);
+doc.text("Cost",160,y);
+
+y+=3;
+doc.line(20,y,190,y);
+
+y+=8;
+
+doc.setFont("helvetica","normal");
+
+let totalSqFt=0;
+let totalCost=0;
+
+rooms.forEach(room=>{
+
+doc.text(room.name,20,y);
+doc.text(room.area.toFixed(2),90,y);
+doc.text("$"+room.price.toFixed(2),120,y);
+doc.text("$"+room.roomCost.toFixed(2),160,y);
+
+y+=8;
+
+totalSqFt+=room.area;
+totalCost+=room.roomCost;
+
+});
+
+y+=6;
+doc.line(20,y,190,y);
+
+y+=10;
+
+let waste=totalSqFt*0.10;
+let finalSqFt=totalSqFt+waste;
+let avgPrice=totalCost/totalSqFt;
+let finalCost=finalSqFt*avgPrice;
+
+doc.setFont("helvetica","bold");
+
+doc.text("Total Sq Ft:",20,y);
+doc.text(totalSqFt.toFixed(2)+" sq ft",150,y);
+
+y+=8;
+
+doc.text("Waste (10%):",20,y);
+doc.text(waste.toFixed(2)+" sq ft",150,y);
+
+y+=8;
+
+doc.text("Total Flooring Needed:",20,y);
+doc.text(finalSqFt.toFixed(2)+" sq ft",150,y);
+
+y+=10;
+
+doc.setFontSize(14);
+
+doc.text("Estimated Project Cost:",20,y);
+doc.text("$"+finalCost.toFixed(2),150,y);
+
+y+=25;
+
+doc.setFontSize(11);
+doc.setFont("helvetica","normal");
+
+doc.text("Customer Approval Signature:",20,y);
+
+doc.line(70,y,170,y);
+
+y+=10;
+
+doc.text("Date:",20,y);
+
+doc.line(35,y,90,y);
+
+doc.save(estimateNumber+"_"+name.replace(/\s/g,"_")+".pdf");
+
+}
+
+</script>
+
+</body>
+</html>
