@@ -1,384 +1,616 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Eaton Hardwood Flooring Estimator</title>
-
+<title>Eaton Hardwood Flooring — Estimate</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
-
-body{
-    font-family:Arial;
-    color:white;
-    text-align:center;
-
-    background-image:url("https://www.eatonhardwoodfloors.com/assets/images/patterns-custom8-2000x1495-79.jpg");
-    background-size:cover;
-    background-position:center;
-    background-repeat:no-repeat;
-    background-attachment:scroll;
+:root {
+  --oak: #c8a96e;
+  --oak-light: #e8d5b0;
+  --oak-dark: #8b6914;
+  --walnut: #2c1f0e;
+  --walnut-mid: #4a3520;
+  --cream: #f9f4ec;
+  --ink: #1a1208;
+  --muted: #8a7a65;
+  --danger: #c0392b;
+  --success: #1e6e45;
+  --info: #1a4a6e;
+  --radius: 4px;
 }
 
-.overlay{
-background:rgba(0,0,0,0.7);
-min-height:100vh;
-padding:20px;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--walnut);
+  color: var(--cream);
+  min-height: 100vh;
+  background-image:
+    url("https://www.eatonhardwoodfloors.com/assets/images/patterns-custom8-2000x1495-79.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
-input{
-padding:10px;
-margin:6px;
-width:220px;
-font-size:16px;
-border-radius:5px;
-border:none;
+.overlay {
+  min-height: 100vh;
+  background: linear-gradient(160deg, rgba(20,12,4,0.93) 0%, rgba(30,18,6,0.90) 100%);
+  padding: 0 0 60px;
 }
 
-button{
-padding:10px 16px;
-margin:6px;
-font-size:16px;
-border:none;
-border-radius:6px;
-cursor:pointer;
+/* ── HEADER ── */
+.site-header {
+  border-bottom: 1px solid rgba(200,169,110,0.25);
+  padding: 28px 40px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
-.addBtn{background:#2ecc71;color:white;}
-.deleteBtn{background:#e74c3c;color:white;}
-.emailBtn{background:#3498db;color:white;}
-.pdfBtn{background:#f39c12;color:white;}
-
-table{
-width:95%;
-margin:auto;
-border-collapse:collapse;
-margin-top:20px;
-background:rgba(0,0,0,0.8);
+.logo-mark {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--oak);
+  border-radius: 2px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
 }
 
-td,th{
-border:1px solid #444;
-padding:8px;
+.logo-mark svg { width: 28px; height: 28px; }
+
+.brand h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--oak-light);
+  line-height: 1;
 }
 
-#results{
-margin-top:20px;
-font-size:20px;
+.brand p {
+  font-size: .75rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
 }
 
+/* ── MAIN GRID ── */
+.main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+@media (max-width: 760px) {
+  .main { grid-template-columns: 1fr; }
+  .site-header { padding: 20px; }
+}
+
+/* ── CARDS ── */
+.card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(200,169,110,0.18);
+  border-radius: 8px;
+  padding: 28px;
+}
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  color: var(--oak);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(200,169,110,0.18);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title svg { flex-shrink: 0; }
+
+/* ── FORM FIELDS ── */
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  font-size: .7rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(200,169,110,0.25);
+  border-radius: var(--radius);
+  color: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .95rem;
+  padding: 10px 14px;
+  transition: border-color .2s, background .2s;
+  outline: none;
+}
+
+.field input:focus {
+  border-color: var(--oak);
+  background: rgba(200,169,110,0.08);
+}
+
+.field input::placeholder { color: rgba(249,244,236,0.25); }
+
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .85rem;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity .2s, transform .1s;
+  white-space: nowrap;
+}
+
+.btn:hover { opacity: .88; }
+.btn:active { transform: scale(.98); }
+
+.btn-add    { background: var(--success); color: #fff; width: 100%; margin-top: 6px; }
+.btn-delete { background: transparent; color: #e06c6c; border: 1px solid #c0392b; padding: 5px 10px; font-size: .75rem; border-radius: 3px; }
+.btn-email  { background: var(--info); color: #fff; }
+.btn-pdf    { background: var(--oak-dark); color: var(--cream); }
+
+.action-row {
+  max-width: 1100px;
+  margin: 28px auto 0;
+  padding: 0 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ── TABLE ── */
+.table-wrap {
+  grid-column: 1 / -1;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .9rem;
+}
+
+thead tr {
+  background: rgba(200,169,110,0.12);
+}
+
+thead th {
+  padding: 11px 14px;
+  text-align: left;
+  font-size: .68rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--oak);
+  font-weight: 500;
+  border-bottom: 1px solid rgba(200,169,110,0.2);
+}
+
+tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background .15s;
+}
+
+tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+tbody td {
+  padding: 11px 14px;
+  color: rgba(249,244,236,0.85);
+}
+
+tbody td.room-name { color: var(--cream); font-weight: 500; }
+
+.empty-state {
+  text-align: center;
+  padding: 32px;
+  color: var(--muted);
+  font-size: .85rem;
+  letter-spacing: .06em;
+}
+
+/* ── RESULTS ── */
+.results-card {
+  grid-column: 1 / -1;
+  background: rgba(200,169,110,0.07);
+  border: 1px solid rgba(200,169,110,0.3);
+  border-radius: 8px;
+  padding: 24px 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+.stat { text-align: center; }
+
+.stat-label {
+  font-size: .68rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  color: var(--oak-light);
+  line-height: 1;
+}
+
+.stat-value.big {
+  font-size: 2rem;
+  color: var(--oak);
+}
+
+.divider {
+  width: 1px;
+  background: rgba(200,169,110,0.2);
+  align-self: stretch;
+}
+
+@media (max-width: 600px) { .divider { display: none; } }
+
+/* fade-in rows */
+@keyframes fadeRow {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+tbody tr { animation: fadeRow .2s ease both; }
 </style>
-
 </head>
-
 <body>
 
 <div class="overlay">
 
-<h2>Eaton Hardwood Flooring Estimator</h2>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="10" width="24" height="4" rx="1" fill="#c8a96e"/>
+        <rect x="2" y="16" width="24" height="4" rx="1" fill="#c8a96e" opacity=".7"/>
+        <rect x="2" y="4"  width="24" height="4" rx="1" fill="#c8a96e" opacity=".4"/>
+      </svg>
+    </div>
+    <div class="brand">
+      <h1>Eaton Hardwood Flooring</h1>
+      <p>Professional Estimate Tool</p>
+    </div>
+  </header>
 
-<h3>Customer Information</h3>
+  <!-- Main Grid -->
+  <div class="main">
 
-<input id="customerName" placeholder="Customer Name"><br>
-<input id="customerAddress" placeholder="Customer Address"><br>
-<input id="customerEmail" placeholder="Customer Email"><br>
+    <!-- Customer Info -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Customer Information
+      </div>
+      <div class="field">
+        <label>Full Name</label>
+        <input id="customerName" placeholder="Jane Smith">
+      </div>
+      <div class="field">
+        <label>Address</label>
+        <input id="customerAddress" placeholder="123 Oak Lane, Dallas TX">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input id="customerEmail" placeholder="jane@example.com" type="email">
+      </div>
+    </div>
 
-<h3>Add Room</h3>
+    <!-- Add Room -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Add Room
+      </div>
+      <div class="field">
+        <label>Room Name</label>
+        <input id="roomName" placeholder="Living Room">
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label>Length (ft)</label>
+          <input id="length" placeholder="20" type="number" min="0">
+        </div>
+        <div class="field">
+          <label>Width (ft)</label>
+          <input id="width" placeholder="15" type="number" min="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>Price per sq ft ($)</label>
+        <input id="price" placeholder="6.50" type="number" min="0" step="0.01">
+      </div>
+      <button class="btn btn-add" onclick="addRoom()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Room
+      </button>
+    </div>
 
-<input id="roomName" placeholder="Room Name"><br>
+    <!-- Table -->
+    <div class="card table-wrap">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+        Room Breakdown
+      </div>
+      <table id="roomTable">
+        <thead>
+          <tr>
+            <th>Room</th>
+            <th>Sq Ft</th>
+            <th>$/sq ft</th>
+            <th>Room Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="roomBody">
+          <tr><td colspan="5" class="empty-state">No rooms added yet — add your first room above.</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-<input id="length" placeholder="Length (ft)">
-<input id="width" placeholder="Width (ft)"><br>
+    <!-- Results -->
+    <div class="results-card" id="resultsCard" style="display:none">
+      <div class="stat">
+        <div class="stat-label">Base Sq Ft</div>
+        <div class="stat-value" id="resBase">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-label">Waste (10%)</div>
+        <div class="stat-value" id="resWaste">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-label">Total Flooring Needed</div>
+        <div class="stat-value" id="resTotal">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-label">Estimated Project Cost</div>
+        <div class="stat-value big" id="resCost">—</div>
+      </div>
+    </div>
 
-<input id="price" placeholder="Price $ per sq ft"><br>
+  </div><!-- /main -->
 
-<button class="addBtn" onclick="addRoom()">Add Room</button>
+  <!-- Action Buttons -->
+  <div class="action-row">
+    <button class="btn btn-email" onclick="emailEstimate()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Email Estimate
+    </button>
+    <button class="btn btn-pdf" onclick="generatePDF()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Generate PDF
+    </button>
+  </div>
 
-<table id="roomTable">
-
-<tr>
-<th>Room</th>
-<th>Sq Ft</th>
-<th>Price</th>
-<th>Room Cost</th>
-<th>Delete</th>
-</tr>
-
-</table>
-
-<div id="results"></div>
-
-<br>
-
-<button class="emailBtn" onclick="emailEstimate()">Email Estimate</button>
-
-<button class="pdfBtn" onclick="generatePDF()">Generate PDF Estimate</button>
-
-</div>
+</div><!-- /overlay -->
 
 <script>
+let rooms = [];
 
-let rooms=[];
+function addRoom() {
+  const name   = document.getElementById("roomName").value.trim() || "Unnamed Room";
+  const length = parseFloat(document.getElementById("length").value);
+  const width  = parseFloat(document.getElementById("width").value);
+  const price  = parseFloat(document.getElementById("price").value);
 
-function addRoom(){
+  if (!length || !width || !price) return;
 
-let name=document.getElementById("roomName").value;
-let length=parseFloat(document.getElementById("length").value);
-let width=parseFloat(document.getElementById("width").value);
-let price=parseFloat(document.getElementById("price").value);
+  const area     = length * width;
+  const roomCost = area * price;
+  rooms.push({ name, area, price, roomCost });
+  renderTable();
 
-if(!length || !width || !price) return;
-
-let area=length*width;
-let roomCost=area*price;
-
-rooms.push({name,area,price,roomCost});
-
-renderTable();
-
-document.getElementById("roomName").value="";
-document.getElementById("length").value="";
-document.getElementById("width").value="";
-document.getElementById("price").value="";
+  ["roomName","length","width","price"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("roomName").focus();
 }
 
-function deleteRoom(index){
-
-rooms.splice(index,1);
-renderTable();
-
+function deleteRoom(index) {
+  rooms.splice(index, 1);
+  renderTable();
 }
 
-function renderTable(){
+function renderTable() {
+  const tbody = document.getElementById("roomBody");
+  tbody.innerHTML = "";
 
-let table=document.getElementById("roomTable");
+  if (!rooms.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No rooms added yet — add your first room above.</td></tr>`;
+    document.getElementById("resultsCard").style.display = "none";
+    return;
+  }
 
-table.innerHTML=`
-<tr>
-<th>Room</th>
-<th>Sq Ft</th>
-<th>Price</th>
-<th>Room Cost</th>
-<th>Delete</th>
-</tr>`;
+  let totalSqFt = 0, totalCost = 0;
 
-let totalSqFt=0;
-let totalCost=0;
+  rooms.forEach((room, i) => {
+    totalSqFt += room.area;
+    totalCost += room.roomCost;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="room-name">${room.name}</td>
+      <td>${room.area.toFixed(1)}</td>
+      <td>$${room.price.toFixed(2)}</td>
+      <td>$${room.roomCost.toFixed(2)}</td>
+      <td><button class="btn btn-delete" onclick="deleteRoom(${i})">Remove</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
 
-rooms.forEach((room,index)=>{
+  calculateTotals(totalSqFt, totalCost);
+}
 
-totalSqFt+=room.area;
-totalCost+=room.roomCost;
+function calculateTotals(totalSqFt, totalCost) {
+  const waste    = totalSqFt * 0.10;
+  const finalSqFt = totalSqFt + waste;
+  const avgPrice  = totalSqFt ? totalCost / totalSqFt : 0;
+  const finalCost = finalSqFt * avgPrice;
 
-let row=table.insertRow(-1);
+  document.getElementById("resBase").textContent  = totalSqFt.toFixed(1) + " sq ft";
+  document.getElementById("resWaste").textContent = waste.toFixed(1) + " sq ft";
+  document.getElementById("resTotal").textContent = finalSqFt.toFixed(1) + " sq ft";
+  document.getElementById("resCost").textContent  = "$" + finalCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById("resultsCard").style.display = "grid";
 
-row.insertCell(0).innerHTML=room.name;
-row.insertCell(1).innerHTML=room.area.toFixed(2);
-row.insertCell(2).innerHTML="$"+room.price.toFixed(2);
-row.insertCell(3).innerHTML="$"+room.roomCost.toFixed(2);
+  window.totalSqFt    = finalSqFt.toFixed(2);
+  window.totalEstimate = finalCost.toFixed(2);
+}
 
-row.insertCell(4).innerHTML=
-`<button class="deleteBtn" onclick="deleteRoom(${index})">Delete</button>`;
+function emailEstimate() {
+  const email   = document.getElementById("customerEmail").value;
+  const name    = document.getElementById("customerName").value;
+  const address = document.getElementById("customerAddress").value;
+  const subject = encodeURIComponent("Eaton Hardwood Flooring — Project Estimate");
 
+  let roomLines = rooms.map(r =>
+    `  ${r.name}: ${r.area.toFixed(1)} sq ft @ $${r.price.toFixed(2)}/sq ft = $${r.roomCost.toFixed(2)}`
+  ).join("%0D%0A");
+
+  const body =
+    "Dear " + name + ",%0D%0A%0D%0A" +
+    "Thank you for choosing Eaton Hardwood Flooring. Below is your project estimate.%0D%0A%0D%0A" +
+    "Customer: " + name + "%0D%0A" +
+    "Address: " + address + "%0D%0A%0D%0A" +
+    "ROOM BREAKDOWN%0D%0A" + roomLines + "%0D%0A%0D%0A" +
+    "Total Flooring Needed (incl. 10% waste): " + window.totalSqFt + " sq ft%0D%0A" +
+    "Estimated Project Cost: $" + window.totalEstimate + "%0D%0A%0D%0A" +
+    "We look forward to working with you.%0D%0A" +
+    "— Eaton Hardwood Flooring";
+
+  window.location.href = "mailto:" + email + "?subject=" + subject + "&body=" + body;
+}
+
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const name    = document.getElementById("customerName").value || "—";
+  const address = document.getElementById("customerAddress").value || "—";
+  const email   = document.getElementById("customerEmail").value || "—";
+
+  // Header bar
+  doc.setFillColor(44, 31, 14);
+  doc.rect(0, 0, 210, 36, "F");
+  doc.setTextColor(232, 213, 176);
+  doc.setFont("times", "bold");
+  doc.setFontSize(20);
+  doc.text("Eaton Hardwood Flooring", 14, 16);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(160, 130, 90);
+  doc.text("PROFESSIONAL ESTIMATE", 14, 24);
+
+  const today = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  doc.setTextColor(160, 130, 90);
+  doc.text("Date: " + today, 196, 24, { align: "right" });
+
+  // Customer section
+  doc.setTextColor(44, 31, 14);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("CUSTOMER", 14, 50);
+  doc.setDrawColor(200, 169, 110);
+  doc.line(14, 52, 196, 52);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text("Name: "    + name,    14, 60);
+  doc.text("Address: " + address, 14, 68);
+  doc.text("Email: "   + email,   14, 76);
+
+  // Room table
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("ROOM BREAKDOWN", 14, 92);
+  doc.line(14, 94, 196, 94);
+
+  const colX = [14, 80, 120, 160];
+  const headers = ["Room", "Sq Ft", "$/sq ft", "Room Total"];
+  doc.setFontSize(9);
+  doc.setTextColor(100, 70, 20);
+  headers.forEach((h, i) => doc.text(h, colX[i], 103));
+  doc.setDrawColor(220, 190, 130);
+  doc.line(14, 105, 196, 105);
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(44, 31, 14);
+  let y = 113;
+
+  rooms.forEach((r, idx) => {
+    if (idx % 2 === 0) { doc.setFillColor(252, 248, 240); doc.rect(14, y - 6, 182, 9, "F"); }
+    doc.text(r.name,                         colX[0], y);
+    doc.text(r.area.toFixed(1),              colX[1], y);
+    doc.text("$" + r.price.toFixed(2),       colX[2], y);
+    doc.text("$" + r.roomCost.toFixed(2),    colX[3], y);
+    y += 10;
+  });
+
+  // Totals
+  y += 6;
+  doc.setDrawColor(200, 169, 110);
+  doc.line(14, y, 196, y);
+  y += 10;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  const waste = parseFloat(window.totalSqFt) - rooms.reduce((s,r)=>s+r.area,0);
+  doc.text("Total Flooring Needed (incl. 10% waste):", 14, y);
+  doc.text(window.totalSqFt + " sq ft", 196, y, { align: "right" });
+  y += 12;
+  doc.setFontSize(12);
+  doc.setTextColor(139, 105, 20);
+  doc.text("ESTIMATED PROJECT COST:", 14, y);
+  doc.text("$" + parseFloat(window.totalEstimate).toLocaleString(), 196, y, { align: "right" });
+
+  // Footer
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(160, 130, 90);
+  doc.text("Eaton Hardwood Flooring  |  eatonhardwoodfloors.com  |  Estimate subject to change upon site inspection.", 105, 285, { align: "center" });
+
+  doc.save("Eaton_Flooring_Estimate.pdf");
+}
+
+// Allow Enter key to add room
+["roomName","length","width","price"].forEach(id => {
+  document.getElementById(id).addEventListener("keydown", e => { if (e.key === "Enter") addRoom(); });
 });
-
-calculateTotals(totalSqFt,totalCost);
-
-}
-
-function calculateTotals(totalSqFt,totalCost){
-
-let waste=totalSqFt*0.10;
-
-let finalSqFt=totalSqFt+waste;
-
-let avgPrice= totalSqFt ? totalCost/totalSqFt : 0;
-
-let finalCost=finalSqFt*avgPrice;
-
-document.getElementById("results").innerHTML=
-
-"Total Sq Ft: "+totalSqFt.toFixed(2)+
-"<br>Waste (10%): "+waste.toFixed(2)+
-"<br><b>Total Flooring Needed: "+finalSqFt.toFixed(2)+" sq ft</b>"+
-"<br><br><b>Estimated Project Cost: $"+finalCost.toFixed(2)+"</b>";
-
-window.totalSqFt=finalSqFt.toFixed(2);
-window.totalEstimate=finalCost.toFixed(2);
-
-}
-
-function emailEstimate(){
-
-let email=document.getElementById("customerEmail").value;
-
-let name=document.getElementById("customerName").value;
-
-let address=document.getElementById("customerAddress").value;
-
-let subject="Eaton Hardwood Flooring Estimate";
-
-let body=
-"Customer: "+name+"%0D%0A"+
-"Address: "+address+"%0D%0A%0D%0A"+
-"Total Flooring Needed: "+window.totalSqFt+" sq ft%0D%0A"+
-"Estimated Cost: $"+window.totalEstimate;
-
-window.location.href="mailto:"+email+
-"?subject="+subject+
-"&body="+body;
-
-}
-
-function generatePDF(){
-
-const { jsPDF } = window.jspdf;
-
-let doc = new jsPDF();
-
-let name=document.getElementById("customerName").value || "Customer";
-let address=document.getElementById("customerAddress").value || "";
-
-let today=new Date();
-let date=today.toLocaleDateString();
-
-let customerName=document.getElementById("customerName").value || "CUSTOMER";
-
-let lastName=customerName.trim().split(" ").slice(-1)[0].toUpperCase();
-
-let randomNum=Math.floor(1000+Math.random()*9000);
-
-let estimateNumber="EH-"+today.getFullYear()+"-"+lastName+"-"+randomNum;
-
-let y=20;
-
-doc.setFont("helvetica","bold");
-doc.setFontSize(20);
-
-doc.text("Eaton Hardwood Flooring",20,y);
-
-doc.setFontSize(11);
-doc.setFont("helvetica","normal");
-
-doc.text("Phone: (214) 908-1390",150,15);
-doc.text("Email: info@eatonhardwoodfloors.com",150,20);
-
-y+=12;
-
-doc.setFont("helvetica","bold");
-doc.text("Estimate #:",20,y);
-doc.text("Date:",120,y);
-
-doc.setFont("helvetica","normal");
-doc.text(estimateNumber,45,y);
-doc.text(date,135,y);
-
-y+=10;
-
-doc.setFont("helvetica","bold");
-doc.text("Customer Information",20,y);
-
-y+=8;
-
-doc.setFont("helvetica","normal");
-doc.text("Name: "+name,20,y);
-
-y+=6;
-
-doc.text("Address: "+address,20,y);
-
-y+=12;
-
-doc.setFont("helvetica","bold");
-
-doc.text("Room",20,y);
-doc.text("Sq Ft",90,y);
-doc.text("Price",120,y);
-doc.text("Cost",160,y);
-
-y+=3;
-doc.line(20,y,190,y);
-
-y+=8;
-
-doc.setFont("helvetica","normal");
-
-let totalSqFt=0;
-let totalCost=0;
-
-rooms.forEach(room=>{
-
-doc.text(room.name,20,y);
-doc.text(room.area.toFixed(2),90,y);
-doc.text("$"+room.price.toFixed(2),120,y);
-doc.text("$"+room.roomCost.toFixed(2),160,y);
-
-y+=8;
-
-totalSqFt+=room.area;
-totalCost+=room.roomCost;
-
-});
-
-y+=6;
-doc.line(20,y,190,y);
-
-y+=10;
-
-let waste=totalSqFt*0.10;
-let finalSqFt=totalSqFt+waste;
-let avgPrice=totalCost/totalSqFt;
-let finalCost=finalSqFt*avgPrice;
-
-doc.setFont("helvetica","bold");
-
-doc.text("Total Sq Ft:",20,y);
-doc.text(totalSqFt.toFixed(2)+" sq ft",150,y);
-
-y+=8;
-
-doc.text("Waste (10%):",20,y);
-doc.text(waste.toFixed(2)+" sq ft",150,y);
-
-y+=8;
-
-doc.text("Total Flooring Needed:",20,y);
-doc.text(finalSqFt.toFixed(2)+" sq ft",150,y);
-
-y+=10;
-
-doc.setFontSize(14);
-
-doc.text("Estimated Project Cost:",20,y);
-doc.text("$"+finalCost.toFixed(2),150,y);
-
-y+=25;
-
-doc.setFontSize(11);
-doc.setFont("helvetica","normal");
-
-doc.text("Customer Approval Signature:",20,y);
-
-doc.line(70,y,170,y);
-
-y+=10;
-
-doc.text("Date:",20,y);
-
-doc.line(35,y,90,y);
-
-let fileName = estimateNumber+"_"+name.replace(/\s/g,"_")+".pdf";
-
-let pdfBlob = doc.output('blob');
-let url = URL.createObjectURL(pdfBlob);
-
-window.open(url);
-
-}
-
 </script>
-
 </body>
 </html>
