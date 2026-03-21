@@ -181,6 +181,7 @@ body {
 .btn-delete { background: transparent; color: #e06c6c; border: 1px solid #c0392b; padding: 5px 10px; font-size: .75rem; border-radius: 3px; }
 .btn-email  { background: var(--info); color: #fff; }
 .btn-pdf    { background: var(--oak-dark); color: var(--cream); }
+.btn-clear  { background: transparent; color: #e06c6c; border: 1px solid #c0392b; }
 
 .action-row {
   max-width: 1100px;
@@ -408,6 +409,10 @@ tbody tr { animation: fadeRow .2s ease both; }
         <label>Email</label>
         <input id="customerEmail" placeholder="jane@example.com" type="email">
       </div>
+      <div class="field">
+        <label>Estimate Valid Until</label>
+        <input id="expiryDate" type="date">
+      </div>
     </div>
 
     <!-- Add Room -->
@@ -571,6 +576,10 @@ tbody tr { animation: fadeRow .2s ease both; }
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       Generate PDF
     </button>
+    <button class="btn btn-clear" onclick="clearEstimate()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      New Estimate
+    </button>
   </div>
 </div><!-- /overlay -->
 
@@ -676,7 +685,9 @@ function emailEstimate() {
     "Dear " + name + ",%0D%0A%0D%0A" +
     "Thank you for choosing Eaton Hardwood Flooring. Below is your project estimate.%0D%0A%0D%0A" +
     "Customer: " + name + "%0D%0A" +
-    "Address: " + address + "%0D%0A%0D%0A" +
+    "Address: " + address + "%0D%0A" +
+    (document.getElementById("expiryDate").value ? "Estimate Valid Until: " + new Date(document.getElementById("expiryDate").value + "T00:00:00").toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}) + "%0D%0A" : "") +
+    "%0D%0A" +
     "ROOM BREAKDOWN%0D%0A" + roomLines +
     extrasLines + "%0D%0A%0D%0A" +
     "Total Flooring Needed (incl. 10% waste): " + window.totalSqFt + " sq ft%0D%0A" +
@@ -726,6 +737,16 @@ function generatePDF() {
   doc.text("Name: "    + name,    14, 60);
   doc.text("Address: " + address, 14, 68);
   doc.text("Email: "   + email,   14, 76);
+
+  const expiryRaw = document.getElementById("expiryDate").value;
+  if (expiryRaw) {
+    const expiryFmt = new Date(expiryRaw + "T00:00:00").toLocaleDateString("en-US", {year:"numeric",month:"long",day:"numeric"});
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(180, 50, 30);
+    doc.text("Estimate Valid Until: " + expiryFmt, 14, 84);
+    doc.setTextColor(44, 31, 14);
+    doc.setFont("helvetica", "normal");
+  }
 
   // Room table
   doc.setFont("helvetica", "bold");
@@ -873,7 +894,52 @@ function getExtras() {
 }
 
 
+function clearEstimate() {
+  if (!confirm("Start a new estimate? All current data will be cleared.")) return;
+
+  // Customer fields
+  ["customerName","customerAddress","customerEmail","expiryDate","taxRate","estimateNotes"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+
+  // Extra items
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById("extra"+i+"Label").value = "";
+    document.getElementById("extra"+i+"Cost").value  = "";
+  }
+
+  // Rooms
+  rooms = [];
+  renderTable();
+
+  // Hide results
+  document.getElementById("resultsCard").style.display = "none";
+
+  // Close extras panel
+  document.getElementById("extrasPanel").classList.remove("open");
+  document.getElementById("extrasBtn").classList.remove("open");
+
+  // Reset globals
+  window.totalSqFt = window.totalEstimate = window.flooringCost = window.subtotal = window.taxAmt = "0.00";
+  window.taxRate = 0;
+
+  // Set default expiry 30 days from today
+  const exp = new Date();
+  exp.setDate(exp.getDate() + 30);
+  document.getElementById("expiryDate").value = exp.toISOString().split("T")[0];
+
+  document.getElementById("customerName").focus();
+}
+
 // Allow Enter key to add room
+// Set default expiry date to 30 days from today
+(function() {
+  const exp = new Date();
+  exp.setDate(exp.getDate() + 30);
+  document.getElementById("expiryDate").value = exp.toISOString().split("T")[0];
+})();
+
 ["roomName","length","width","price"].forEach(id => {
   document.getElementById(id).addEventListener("keydown", e => { if (e.key === "Enter") addRoom(); });
 });
