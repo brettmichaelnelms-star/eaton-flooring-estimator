@@ -604,7 +604,17 @@ function generatePDF() {
   doc.setTextColor(160, 130, 90);
   doc.text("Eaton Hardwood Flooring  |  eatonhardwoodfloors.com  |  Estimate subject to change upon site inspection.", 105, 285, { align: "center" });
 
-  doc.save("Eaton_Flooring_Estimate.pdf");
+  const safeName = name.trim().replace(/[^a-z0-9]/gi, "_");
+  const today2 = new Date();
+  const dateStr = today2.getFullYear() + "-" +
+    String(today2.getMonth()+1).padStart(2,"0") + "-" +
+    String(today2.getDate()).padStart(2,"0");
+
+  const filename = safeName && safeName !== "—"
+    ? `Eaton_Estimate_${safeName}_${dateStr}.pdf`
+    : `Eaton_Estimate_${Date.now()}.pdf`;
+
+  doc.save(filename);
 }
 
 // Allow Enter key to add room
