@@ -332,6 +332,34 @@ tbody td.room-name { color: var(--cream); font-weight: 500; }
 .extras-grid .field { margin-bottom: 0; }
 .extras-grid .field input { width: 100%; }
 
+/* ── TAX / NOTES ── */
+.meta-row {
+  max-width: 1100px;
+  margin: 24px auto 0;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+}
+@media (max-width: 600px) { .meta-row { grid-template-columns: 1fr; } }
+.meta-row .card { padding: 20px 22px; }
+.meta-row textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(200,169,110,0.25);
+  border-radius: 4px;
+  color: var(--cream);
+  font-family: "DM Sans", sans-serif;
+  font-size: .9rem;
+  padding: 10px 14px;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: border-color .2s;
+}
+.meta-row textarea:focus { border-color: var(--oak); }
+.meta-row textarea::placeholder { color: rgba(249,244,236,0.25); }
+
 /* fade-in rows */
 @keyframes fadeRow {
   from { opacity: 0; transform: translateY(6px); }
@@ -452,12 +480,46 @@ tbody tr { animation: fadeRow .2s ease both; }
       </div>
       <div class="divider"></div>
       <div class="stat">
-        <div class="stat-label">Estimated Project Cost</div>
+        <div class="stat-label">Subtotal</div>
+        <div class="stat-value" id="resSubtotal">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-label">Tax</div>
+        <div class="stat-value" id="resTax">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-label">Total Due</div>
         <div class="stat-value big" id="resCost">—</div>
       </div>
     </div>
 
   </div><!-- /main -->
+
+  <!-- Tax + Notes Row -->
+  <div class="meta-row">
+    <div class="card">
+      <div class="card-title" style="font-size:.85rem; margin-bottom:14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Tax Rate
+      </div>
+      <div class="field" style="margin:0">
+        <label>Sales Tax (%)</label>
+        <input id="taxRate" placeholder="0.00" type="number" min="0" max="30" step="0.01" oninput="if(rooms.length) renderTable()">
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="font-size:.85rem; margin-bottom:14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Estimate Notes
+      </div>
+      <div class="field" style="margin:0">
+        <label>Special instructions, scope notes, materials spec…</label>
+        <textarea id="estimateNotes" placeholder="e.g. Customer to move furniture. Install to begin after subfloor inspection. 3/4&#34; red oak select grade throughout."></textarea>
+      </div>
+    </div>
+  </div>
 
   <!-- Additional Items Toggle -->
   <div class="extras-toggle">
@@ -510,7 +572,6 @@ tbody tr { animation: fadeRow .2s ease both; }
       Generate PDF
     </button>
   </div>
-
 </div><!-- /overlay -->
 
 <script>
@@ -568,22 +629,32 @@ function renderTable() {
 }
 
 function calculateTotals(totalSqFt, totalCost) {
-  const waste    = totalSqFt * 0.10;
-  const finalSqFt = totalSqFt + waste;
-  const avgPrice  = totalSqFt ? totalCost / totalSqFt : 0;
+  const waste        = totalSqFt * 0.10;
+  const finalSqFt    = totalSqFt + waste;
+  const avgPrice     = totalSqFt ? totalCost / totalSqFt : 0;
   const flooringCost = finalSqFt * avgPrice;
-  const extrasCost = getExtras().reduce((s, e) => s + e.cost, 0);
-  const finalCost = flooringCost + extrasCost;
+  const extrasCost   = getExtras().reduce((s, e) => s + e.cost, 0);
+  const subtotal     = flooringCost + extrasCost;
+  const taxRate      = parseFloat(document.getElementById("taxRate").value) || 0;
+  const taxAmt       = subtotal * (taxRate / 100);
+  const finalCost    = subtotal + taxAmt;
 
-  document.getElementById("resBase").textContent  = totalSqFt.toFixed(1) + " sq ft";
-  document.getElementById("resWaste").textContent = waste.toFixed(1) + " sq ft";
-  document.getElementById("resTotal").textContent = finalSqFt.toFixed(1) + " sq ft";
-  document.getElementById("resCost").textContent  = "$" + finalCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const fmt = v => "$" + v.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  document.getElementById("resBase").textContent     = totalSqFt.toFixed(1) + " sq ft";
+  document.getElementById("resWaste").textContent    = waste.toFixed(1) + " sq ft";
+  document.getElementById("resTotal").textContent    = finalSqFt.toFixed(1) + " sq ft";
+  document.getElementById("resSubtotal").textContent = fmt(subtotal);
+  document.getElementById("resTax").textContent      = taxRate > 0 ? fmt(taxAmt) + " (" + taxRate + "%)" : "—";
+  document.getElementById("resCost").textContent     = fmt(finalCost);
   document.getElementById("resultsCard").style.display = "grid";
 
-  window.totalSqFt      = finalSqFt.toFixed(2);
-  window.flooringCost   = flooringCost.toFixed(2);
-  window.totalEstimate  = finalCost.toFixed(2);
+  window.totalSqFt     = finalSqFt.toFixed(2);
+  window.flooringCost  = flooringCost.toFixed(2);
+  window.subtotal      = subtotal.toFixed(2);
+  window.taxAmt        = taxAmt.toFixed(2);
+  window.taxRate       = taxRate;
+  window.totalEstimate = finalCost.toFixed(2);
 }
 
 function emailEstimate() {
@@ -609,7 +680,10 @@ function emailEstimate() {
     "ROOM BREAKDOWN%0D%0A" + roomLines +
     extrasLines + "%0D%0A%0D%0A" +
     "Total Flooring Needed (incl. 10% waste): " + window.totalSqFt + " sq ft%0D%0A" +
-    "Estimated Project Cost: $" + window.totalEstimate + "%0D%0A%0D%0A" +
+    "Subtotal: $" + window.subtotal + "%0D%0A" +
+    (window.taxRate > 0 ? "Sales Tax (" + window.taxRate + "%): $" + window.taxAmt + "%0D%0A" : "") +
+    "TOTAL DUE: $" + window.totalEstimate + "%0D%0A%0D%0A" +
+    (document.getElementById("estimateNotes").value.trim() ? "NOTES%0D%0A" + document.getElementById("estimateNotes").value.trim().replace(/\n/g,"%0D%0A") + "%0D%0A%0D%0A" : "") +
     "We look forward to working with you.%0D%0A" +
     "— Eaton Hardwood Flooring";
 
@@ -707,16 +781,62 @@ function generatePDF() {
     y += 10;
   }
 
-  doc.setFont("helvetica", "bold");
+  const fmtPDF = v => "$" + parseFloat(v).toLocaleString("en-US", {minimumFractionDigits:2});
+
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(44, 31, 14);
   doc.text("Flooring Cost (incl. 10% waste):", 14, y);
-  doc.text("$" + parseFloat(window.flooringCost).toLocaleString('en-US',{minimumFractionDigits:2}), 196, y, { align: "right" });
-  y += 12;
+  doc.text(fmtPDF(window.flooringCost), 196, y, { align: "right" });
+  y += 10;
+
+  if (window.taxRate > 0) {
+    doc.text("Sales Tax (" + window.taxRate + "%):", 14, y);
+    doc.text(fmtPDF(window.taxAmt), 196, y, { align: "right" });
+    y += 10;
+  }
+
+  doc.setDrawColor(200, 169, 110);
+  doc.line(14, y, 196, y);
+  y += 10;
+
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.setTextColor(139, 105, 20);
-  doc.text("ESTIMATED PROJECT COST:", 14, y);
-  doc.text("$" + parseFloat(window.totalEstimate).toLocaleString('en-US',{minimumFractionDigits:2}), 196, y, { align: "right" });
+  doc.text("TOTAL DUE:", 14, y);
+  doc.text(fmtPDF(window.totalEstimate), 196, y, { align: "right" });
+  y += 16;
+
+  // Notes
+  const notes = document.getElementById("estimateNotes").value.trim();
+  if (notes) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(100, 70, 20);
+    doc.text("NOTES", 14, y);
+    doc.setDrawColor(200, 169, 110);
+    doc.line(14, y + 2, 196, y + 2);
+    y += 10;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(44, 31, 14);
+    doc.setFontSize(9);
+    const noteLines = doc.splitTextToSize(notes, 182);
+    doc.text(noteLines, 14, y);
+    y += noteLines.length * 6 + 10;
+  }
+
+  // Signature line
+  const sigY = Math.max(y + 10, 230);
+  doc.setDrawColor(180, 150, 80);
+  doc.setLineWidth(0.4);
+  doc.line(14, sigY, 100, sigY);
+  doc.line(116, sigY, 196, sigY);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(120, 90, 30);
+  doc.text("Customer Signature", 14, sigY + 5);
+  doc.text("Date", 116, sigY + 5);
+  doc.setLineWidth(0.2);
 
   // Footer
   doc.setFontSize(8);
@@ -751,6 +871,7 @@ function getExtras() {
     return { label: label || document.getElementById(`extra${i}Label`).placeholder, cost };
   }).filter(e => e.cost > 0);
 }
+
 
 // Allow Enter key to add room
 ["roomName","length","width","price"].forEach(id => {
