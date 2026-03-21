@@ -282,6 +282,56 @@ tbody td.room-name { color: var(--cream); font-weight: 500; }
 
 @media (max-width: 600px) { .divider { display: none; } }
 
+/* ── EXTRAS ── */
+.extras-toggle {
+  max-width: 1100px;
+  margin: 24px auto 0;
+  padding: 0 20px;
+}
+
+.extras-toggle button {
+  background: none;
+  border: 1px dashed rgba(200,169,110,0.4);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .8rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color .2s, border-color .2s;
+}
+
+.extras-toggle button:hover { color: var(--oak); border-color: var(--oak); }
+.extras-toggle button .chevron { transition: transform .25s; display: inline-block; }
+.extras-toggle button.open .chevron { transform: rotate(180deg); }
+
+.extras-panel {
+  max-width: 1100px;
+  margin: 12px auto 0;
+  padding: 0 20px;
+  display: none;
+}
+
+.extras-panel.open { display: block; }
+
+.extras-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(200,169,110,0.18);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.extras-grid .field { margin-bottom: 0; }
+.extras-grid .field input { width: 100%; }
+
 /* fade-in rows */
 @keyframes fadeRow {
   from { opacity: 0; transform: translateY(6px); }
@@ -409,6 +459,46 @@ tbody tr { animation: fadeRow .2s ease both; }
 
   </div><!-- /main -->
 
+  <!-- Additional Items Toggle -->
+  <div class="extras-toggle">
+    <button id="extrasBtn" onclick="toggleExtras()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Additional Items
+      <svg class="chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+  </div>
+
+  <!-- Additional Items Panel -->
+  <div class="extras-panel" id="extrasPanel">
+    <div class="extras-grid">
+      <div class="field">
+        <label>Item Label</label>
+        <input id="extra1Label" placeholder="Demo / Tear-Out" style="margin-bottom:6px">
+        <input id="extra1Cost" placeholder="$0.00" type="number" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Item Label</label>
+        <input id="extra2Label" placeholder="Stairs">
+        <input id="extra2Cost" placeholder="$0.00" type="number" min="0" step="0.01" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Item Label</label>
+        <input id="extra3Label" placeholder="Transitions / Thresholds">
+        <input id="extra3Cost" placeholder="$0.00" type="number" min="0" step="0.01" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Item Label</label>
+        <input id="extra4Label" placeholder="Subfloor Prep">
+        <input id="extra4Cost" placeholder="$0.00" type="number" min="0" step="0.01" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Item Label</label>
+        <input id="extra5Label" placeholder="Other">
+        <input id="extra5Cost" placeholder="$0.00" type="number" min="0" step="0.01" style="margin-top:6px">
+      </div>
+    </div>
+  </div>
+
   <!-- Action Buttons -->
   <div class="action-row">
     <button class="btn btn-email" onclick="emailEstimate()">
@@ -481,7 +571,9 @@ function calculateTotals(totalSqFt, totalCost) {
   const waste    = totalSqFt * 0.10;
   const finalSqFt = totalSqFt + waste;
   const avgPrice  = totalSqFt ? totalCost / totalSqFt : 0;
-  const finalCost = finalSqFt * avgPrice;
+  const flooringCost = finalSqFt * avgPrice;
+  const extrasCost = getExtras().reduce((s, e) => s + e.cost, 0);
+  const finalCost = flooringCost + extrasCost;
 
   document.getElementById("resBase").textContent  = totalSqFt.toFixed(1) + " sq ft";
   document.getElementById("resWaste").textContent = waste.toFixed(1) + " sq ft";
@@ -489,8 +581,9 @@ function calculateTotals(totalSqFt, totalCost) {
   document.getElementById("resCost").textContent  = "$" + finalCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
   document.getElementById("resultsCard").style.display = "grid";
 
-  window.totalSqFt    = finalSqFt.toFixed(2);
-  window.totalEstimate = finalCost.toFixed(2);
+  window.totalSqFt      = finalSqFt.toFixed(2);
+  window.flooringCost   = flooringCost.toFixed(2);
+  window.totalEstimate  = finalCost.toFixed(2);
 }
 
 function emailEstimate() {
@@ -503,12 +596,18 @@ function emailEstimate() {
     `  ${r.name}: ${r.area.toFixed(1)} sq ft @ $${r.price.toFixed(2)}/sq ft = $${r.roomCost.toFixed(2)}`
   ).join("%0D%0A");
 
+  const extras = getExtras();
+  const extrasLines = extras.length
+    ? "%0D%0AADDITIONAL ITEMS%0D%0A" + extras.map(e => `  ${e.label}: $${e.cost.toFixed(2)}`).join("%0D%0A")
+    : "";
+
   const body =
     "Dear " + name + ",%0D%0A%0D%0A" +
     "Thank you for choosing Eaton Hardwood Flooring. Below is your project estimate.%0D%0A%0D%0A" +
     "Customer: " + name + "%0D%0A" +
     "Address: " + address + "%0D%0A%0D%0A" +
-    "ROOM BREAKDOWN%0D%0A" + roomLines + "%0D%0A%0D%0A" +
+    "ROOM BREAKDOWN%0D%0A" + roomLines +
+    extrasLines + "%0D%0A%0D%0A" +
     "Total Flooring Needed (incl. 10% waste): " + window.totalSqFt + " sq ft%0D%0A" +
     "Estimated Project Cost: $" + window.totalEstimate + "%0D%0A%0D%0A" +
     "We look forward to working with you.%0D%0A" +
@@ -540,7 +639,7 @@ function generatePDF() {
   doc.setTextColor(160, 130, 90);
   doc.text("Date: " + today, 196, 24, { align: "right" });
 
-  // Customer section
+    // Customer section
   doc.setTextColor(44, 31, 14);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
@@ -587,16 +686,37 @@ function generatePDF() {
   doc.line(14, y, 196, y);
   y += 10;
 
+  const extras = getExtras();
+  if (extras.length) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(100, 70, 20);
+    doc.text("ADDITIONAL ITEMS", 14, y);
+    y += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(44, 31, 14);
+    extras.forEach((e, idx) => {
+      if (idx % 2 === 0) { doc.setFillColor(252, 248, 240); doc.rect(14, y - 6, 182, 9, "F"); }
+      doc.text(e.label, colX[0], y);
+      doc.text("$" + e.cost.toFixed(2), colX[3], y);
+      y += 10;
+    });
+    y += 4;
+    doc.setDrawColor(200, 169, 110);
+    doc.line(14, y, 196, y);
+    y += 10;
+  }
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  const waste = parseFloat(window.totalSqFt) - rooms.reduce((s,r)=>s+r.area,0);
-  doc.text("Total Flooring Needed (incl. 10% waste):", 14, y);
-  doc.text(window.totalSqFt + " sq ft", 196, y, { align: "right" });
+  doc.setTextColor(44, 31, 14);
+  doc.text("Flooring Cost (incl. 10% waste):", 14, y);
+  doc.text("$" + parseFloat(window.flooringCost).toLocaleString('en-US',{minimumFractionDigits:2}), 196, y, { align: "right" });
   y += 12;
   doc.setFontSize(12);
   doc.setTextColor(139, 105, 20);
   doc.text("ESTIMATED PROJECT COST:", 14, y);
-  doc.text("$" + parseFloat(window.totalEstimate).toLocaleString(), 196, y, { align: "right" });
+  doc.text("$" + parseFloat(window.totalEstimate).toLocaleString('en-US',{minimumFractionDigits:2}), 196, y, { align: "right" });
 
   // Footer
   doc.setFontSize(8);
@@ -615,6 +735,21 @@ function generatePDF() {
     : `Eaton_Estimate_${Date.now()}.pdf`;
 
   doc.save(filename);
+}
+
+function toggleExtras() {
+  const btn   = document.getElementById("extrasBtn");
+  const panel = document.getElementById("extrasPanel");
+  btn.classList.toggle("open");
+  panel.classList.toggle("open");
+}
+
+function getExtras() {
+  return [1,2,3,4,5].map(i => {
+    const label = document.getElementById(`extra${i}Label`).value.trim();
+    const cost  = parseFloat(document.getElementById(`extra${i}Cost`).value) || 0;
+    return { label: label || document.getElementById(`extra${i}Label`).placeholder, cost };
+  }).filter(e => e.cost > 0);
 }
 
 // Allow Enter key to add room
