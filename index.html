@@ -155,6 +155,46 @@ body {
 
 .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+/* dimension input groups */
+.dim-group {
+  display: grid;
+  grid-template-columns: 2fr 2fr 3fr;
+  gap: 5px;
+  align-items: end;
+}
+.dim-group input, .dim-group select {
+  padding: 10px 8px;
+  font-size: .85rem;
+  width: 100%;
+}
+.dim-group select {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(200,169,110,0.25);
+  border-radius: var(--radius);
+  color: var(--cream);
+  font-family: "DM Sans", sans-serif;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.dim-group select:focus { border-color: var(--oak); }
+.dim-group select option { background: #2c1f0e; color: var(--cream); }
+.dim-sublabel {
+  font-size: .62rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 3px;
+}
+.dim-hint {
+  font-size: .7rem;
+  color: var(--muted);
+  margin-top: 4px;
+  font-style: italic;
+}
+
 /* ── BUTTONS ── */
 .btn {
   display: inline-flex;
@@ -425,15 +465,57 @@ tbody tr { animation: fadeRow .2s ease both; }
         <label>Room Name</label>
         <input id="roomName" placeholder="Living Room">
       </div>
-      <div class="row-2">
-        <div class="field">
-          <label>Length (ft)</label>
-          <input id="length" placeholder="20" type="number" min="0">
+      <div class="field">
+        <label>Length</label>
+        <div class="dim-group">
+          <input id="lengthFt" placeholder="ft" type="number" min="0" step="1">
+          <input id="lengthIn" placeholder="in" type="number" min="0" max="11" step="1">
+          <select id="lengthFrac">
+            <option value="0">— frac —</option>
+            <option value="0.0625">1/16</option>
+            <option value="0.125">1/8</option>
+            <option value="0.1875">3/16</option>
+            <option value="0.25">1/4</option>
+            <option value="0.3125">5/16</option>
+            <option value="0.375">3/8</option>
+            <option value="0.4375">7/16</option>
+            <option value="0.5">1/2</option>
+            <option value="0.5625">9/16</option>
+            <option value="0.625">5/8</option>
+            <option value="0.6875">11/16</option>
+            <option value="0.75">3/4</option>
+            <option value="0.8125">13/16</option>
+            <option value="0.875">7/8</option>
+            <option value="0.9375">15/16</option>
+          </select>
         </div>
-        <div class="field">
-          <label>Width (ft)</label>
-          <input id="width" placeholder="15" type="number" min="0">
+        <div class="dim-sublabel" style="display:grid;grid-template-columns:2fr 2fr 3fr;gap:5px;"><span>Feet</span><span>Inches</span><span>Fraction</span></div>
+      </div>
+      <div class="field">
+        <label>Width</label>
+        <div class="dim-group">
+          <input id="widthFt" placeholder="ft" type="number" min="0" step="1">
+          <input id="widthIn" placeholder="in" type="number" min="0" max="11" step="1">
+          <select id="widthFrac">
+            <option value="0">— frac —</option>
+            <option value="0.0625">1/16</option>
+            <option value="0.125">1/8</option>
+            <option value="0.1875">3/16</option>
+            <option value="0.25">1/4</option>
+            <option value="0.3125">5/16</option>
+            <option value="0.375">3/8</option>
+            <option value="0.4375">7/16</option>
+            <option value="0.5">1/2</option>
+            <option value="0.5625">9/16</option>
+            <option value="0.625">5/8</option>
+            <option value="0.6875">11/16</option>
+            <option value="0.75">3/4</option>
+            <option value="0.8125">13/16</option>
+            <option value="0.875">7/8</option>
+            <option value="0.9375">15/16</option>
+          </select>
         </div>
+        <div class="dim-sublabel" style="display:grid;grid-template-columns:2fr 2fr 3fr;gap:5px;"><span>Feet</span><span>Inches</span><span>Fraction</span></div>
       </div>
       <div class="field">
         <label>Price per sq ft ($)</label>
@@ -586,10 +668,17 @@ tbody tr { animation: fadeRow .2s ease both; }
 <script>
 let rooms = [];
 
+function parseDim(ftId, inId, fracId) {
+  const ft   = parseFloat(document.getElementById(ftId).value)  || 0;
+  const inch = parseFloat(document.getElementById(inId).value)  || 0;
+  const frac = parseFloat(document.getElementById(fracId).value)|| 0;
+  return ft + (inch + frac) / 12;
+}
+
 function addRoom() {
   const name   = document.getElementById("roomName").value.trim() || "Unnamed Room";
-  const length = parseFloat(document.getElementById("length").value);
-  const width  = parseFloat(document.getElementById("width").value);
+  const length = parseDim("lengthFt","lengthIn","lengthFrac");
+  const width  = parseDim("widthFt","widthIn","widthFrac");
   const price  = parseFloat(document.getElementById("price").value);
 
   if (!length || !width || !price) return;
@@ -599,7 +688,8 @@ function addRoom() {
   rooms.push({ name, area, price, roomCost });
   renderTable();
 
-  ["roomName","length","width","price"].forEach(id => document.getElementById(id).value = "");
+  ["roomName","lengthFt","lengthIn","widthFt","widthIn","price"].forEach(id => document.getElementById(id).value = "");
+  ["lengthFrac","widthFrac"].forEach(id => document.getElementById(id).selectedIndex = 0);
   document.getElementById("roomName").focus();
 }
 
@@ -898,7 +988,7 @@ function clearEstimate() {
   if (!confirm("Start a new estimate? All current data will be cleared.")) return;
 
   // Customer fields
-  ["customerName","customerAddress","customerEmail","expiryDate","taxRate","estimateNotes"].forEach(id => {
+  ["customerName","customerAddress","customerEmail","expiryDate","taxRate","estimateNotes","roomName","lengthFt","lengthIn","widthFt","widthIn","price"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
@@ -940,7 +1030,7 @@ function clearEstimate() {
   document.getElementById("expiryDate").value = exp.toISOString().split("T")[0];
 })();
 
-["roomName","length","width","price"].forEach(id => {
+["roomName","lengthFt","lengthIn","widthFt","widthIn","price"].forEach(id => {
   document.getElementById(id).addEventListener("keydown", e => { if (e.key === "Enter") addRoom(); });
 });
 </script>
